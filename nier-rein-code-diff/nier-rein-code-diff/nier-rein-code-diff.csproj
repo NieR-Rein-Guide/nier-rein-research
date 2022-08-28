@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>nier_rein_code_diff</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Templates\CtorIndexSelector.cs" />
+    <Compile Remove="Templates\IndexSelector.cs" />
+    <Compile Remove="Templates\TableClass.cs" />
+    <Compile Remove="Templates\TableElementClass.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Templates\CtorIndexSelector.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Templates\IndexSelector.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Templates\TableClass.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Templates\TableElementClass.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
