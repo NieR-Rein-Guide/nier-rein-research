@@ -1,5 +1,5 @@
 # nier-rein-code-diff
-<b>This tool is meant for internal research and is not designed to be easily understandable.<b>
+<b>This tool is meant for internal research and is not designed to be easily understandable.</b>
 
 This tool creates a difference between a dump.cs by Il2CppDumper of the game and the DarkMasterMemoryDatabase class implemented in nier-rein-api.
 
