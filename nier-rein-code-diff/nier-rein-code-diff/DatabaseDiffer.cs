@@ -5,13 +5,14 @@ using System.Linq;
 using nier_rein_code_diff.Compilation;
 using nier_rein_code_diff.Models;
 using nier_rein_code_diff.Support;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace nier_rein_code_diff
 {
     class DatabaseDiffer
     {
-        private const string MasterDatabasePath_ = @"NierReincarnation.Core\Dark\DarkMasterMemoryDatabase.cs";
-        private const string TablePath_ = @"NierReincarnation.Core\Dark";
+        private const string TablePath_ = @"Dark";
+        private const string MasterDatabasePath_ = TablePath_ + @"\DarkMasterMemoryDatabase.cs";
 
         private readonly string _dumpCsPath;
         private readonly string _apiCodePath;
@@ -56,7 +57,7 @@ namespace nier_rein_code_diff
                 // Determine removed tables
                 foreach (var ownField in ownFields)
                     if (!dumpDict.ContainsKey(ownField.Name))
-                        diff.FieldDiff.Add(new EntityFieldDiff { Type = DiffType.Removed, OwnFieldInfo = dumpDict[ownField.Name] });
+                        diff.FieldDiff.Add(new EntityFieldDiff { Type = DiffType.Removed, OwnFieldInfo = ownDict[ownField.Name] });
 
                 if (diff.FieldDiff.Count > 0)
                     entityDiff.Add(diff);
@@ -104,13 +105,14 @@ namespace nier_rein_code_diff
                 if (nodes[i].Kind != SyntaxNodeKind.Field)
                     continue;
 
+                var typeName = string.Join("", nodes[i].FirstOrDefault(SyntaxNodeKind.Type).FirstOrDefault(SyntaxNodeKind.Fqdn).Nodes.Select(x => x.Text));
                 var fieldName = string.Join("", nodes[i].FirstOrDefault(SyntaxNodeKind.Type).FirstOrDefault(SyntaxNodeKind.GenericTypes).FirstOrDefault(SyntaxNodeKind.Type).FirstOrDefault(SyntaxNodeKind.Fqdn).Nodes.Select(x => x.Text));
                 var offsetComment = nodes[i + 1];
 
                 yield return new FieldInfo
                 {
                     Offset = int.Parse(offsetComment.FirstOrDefault(SyntaxNodeKind.CommentText).Text.Trim()[2..], NumberStyles.HexNumber),
-                    Type = null,    // TODO: Set correct type
+                    Type = typeName,
                     Name = fieldName
                 };
             }

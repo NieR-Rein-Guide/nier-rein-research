@@ -1,19 +1,49 @@
-﻿namespace nier_rein_code_diff
+﻿using CommandLine;
+using CommandLine.Text;
+using nier_rein_code_diff;
+using System.Collections.Generic;
+using System;
+using System.IO;
+
+var parser = new Parser(parserSettings => parserSettings.AutoHelp = true);
+
+var parsedResult = parser.ParseArguments<Options>(args);
+
+parsedResult
+    .WithNotParsed(errors => DisplayHelp(parsedResult, errors))
+    .WithParsed(Execute);
+
+void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errors)
 {
-    class Program
+    var helpText = HelpText.AutoBuild(result, h =>
     {
-        static void Main(string[] args)
-        {
-            var dumpCsPath = @"D:\Users\Kirito\Desktop\NierRein\RE\tools\Il2CppDumper\workspace_ww_2.11.0\dump.cs";
-            var masterDbPath = @"D:\Users\Kirito\Desktop\NierRein\Projects\nier-rein-apps\nier-rein-api";
+        h.AdditionalNewLineAfterOption = false;
+        return HelpText.DefaultParsingErrorsHandler(result, h);
+    }, e => e);
 
-            var differ = new DatabaseDiffer(dumpCsPath, masterDbPath);
-            var diff = differ.CreateDiff();
+    Console.WriteLine(helpText);
+}
 
-            diff.Print();
-
-            var applier = new PatchApplier(dumpCsPath, masterDbPath);
-            applier.Apply(diff);
-        }
+void Execute(Options o)
+{
+    if (!File.Exists(o.Input))
+    {
+        Console.WriteLine($"The input {o.Input} does not exist.");
+        return;
     }
+
+    if (!Directory.Exists(o.Output))
+    {
+        Console.WriteLine($"The output {o.Output} does not exist.");
+        return;
+    }
+
+    var differ = new DatabaseDiffer(o.Input, o.Output);
+    var diff = differ.CreateDiff();
+
+    if (o.Verbose)
+        diff.Print();
+
+    var applier = new PatchApplier(o.Input, o.Output);
+    applier.Apply(diff);
 }

@@ -12,11 +12,11 @@ namespace nier_rein_code_diff
 {
     class PatchApplier
     {
-        private const string MasterDatabasePath_ = @"NierReincarnation.Core\Dark\DarkMasterMemoryDatabase.cs";
-        private const string DarkPath_ = @"NierReincarnation.Core\Dark";
+        private const string DarkPath_ = @"Dark";
+        private const string MasterDatabasePath_ = DarkPath_ + @"\DarkMasterMemoryDatabase.cs";
         private const string TablePath_ = DarkPath_ + @"\Tables";
 
-        private static readonly Regex TableElementSplitter = new Regex(@"[A-Z][a-z]*");
+        private static readonly Regex TableElementSplitter = new(@"[A-Z][a-z]*");
 
         private readonly string _dumpCsPath;
         private readonly string _apiCodePath;
@@ -206,7 +206,6 @@ namespace nier_rein_code_diff
 
             var secondarySelectorType = secondaryTypes.Count <= 0 ? string.Empty : secondaryTypes.Count < 2 ? secondaryTypes[0].Item1 : $"({string.Join(",", secondaryTypes.Select(x => x.Item1))})";
             var secondarySelectorBody = secondaryTypes.Count <= 0 ? string.Empty : secondaryTypes.Count < 2 ? $"element.{secondaryTypes[0].Item2}" : $"({string.Join(",", secondaryTypes.Select(x => $"element.{x.Item2}"))})";
-            //var secondarySelectorNames = secondaryTypes.Select(x => x.Item2).ToArray();
 
             // Build index selector delegates
             var indexDelegateTemplate = File.ReadAllText("Templates\\IndexSelector.cs");
@@ -356,7 +355,60 @@ namespace nier_rein_code_diff
                     newOffsetArray[fieldDiff.DumpFieldInfo.Offset / 8] = nodeIndex;
                 }
 
-                // TODO: Apply new table members
+                // Remove properties
+                foreach (var fieldDiff in diff.FieldDiff.Where(x => x.Type == DiffType.Removed))
+                {
+                    var property = cl.Where(SyntaxNodeKind.Property).FirstOrDefault(p => p.FirstOrDefault(SyntaxNodeKind.MemberName)?.FirstOrDefault(SyntaxNodeKind.Identifier)?.Text == fieldDiff.OwnFieldInfo.Name);
+                    var propertyIndex = cl.Nodes.IndexOf(property);
+
+                    var keyAttributeIndex = propertyIndex - 1;
+                    while (cl.Nodes[keyAttributeIndex].Kind != SyntaxNodeKind.Attribute)
+                        keyAttributeIndex--;
+
+                    var offsetCommentIndex = propertyIndex + 1;
+                    while (cl.Nodes[offsetCommentIndex].Kind != SyntaxNodeKind.Comment)
+                        offsetCommentIndex++;
+
+                    for (var i = 0; i < offsetCommentIndex - keyAttributeIndex + 1; i++)
+                        cl.Nodes.RemoveAt(keyAttributeIndex);
+                }
+
+                cl.Nodes[^2].Nodes[1].Trail = new List<SyntaxNode> { new(SyntaxNodeKind.Identifier) { Text = "\r\n        " } };
+
+                // Adjust key attributes after removing properties
+                var keyIndex = 0;
+                foreach (var attributeNode in cl.Where(SyntaxNodeKind.Attribute))
+                {
+                    var attrNumericLiteral = attributeNode.FirstOrDefault(SyntaxNodeKind.AttributeCtor).FirstOrDefault(SyntaxNodeKind.NumericLiteral);
+
+                    attrNumericLiteral.IntValue = keyIndex;
+                    attrNumericLiteral.Text = $"{keyIndex}";
+
+                    keyIndex++;
+                }
+
+                // Add properties
+                foreach (var fieldDiff in diff.FieldDiff.Where(x => x.Type == DiffType.New))
+                {
+                    // Remap some types
+                    var propertyType = fieldDiff.DumpFieldInfo.Type == "MPDateTime" ? "long" : fieldDiff.DumpFieldInfo.Type.ToLower();
+
+                    var properties = cl.Where(SyntaxNodeKind.Property).Length;
+
+                    cl.Nodes.Insert(cl.Nodes.Count - 1, new SyntaxNode(SyntaxNodeKind.Identifier) { Text = $"[Key({properties})]\r\n        " });
+                    cl.Nodes.Insert(cl.Nodes.Count - 1, new SyntaxNode(SyntaxNodeKind.Identifier) { Text = $"public {propertyType} {fieldDiff.DumpFieldInfo.Name} {{ get; set; }} " });
+                    cl.Nodes.Insert(cl.Nodes.Count - 1, new SyntaxNode(SyntaxNodeKind.Comment)
+                    {
+                        Nodes =
+                        {
+                            new SyntaxNode(SyntaxNodeKind.DoubleSlash) { Text = "//" },
+                            new SyntaxNode(SyntaxNodeKind.CommentText) { Text = $" 0x{fieldDiff.DumpFieldInfo.Offset:X2}", Trail = { new SyntaxNode(SyntaxNodeKind.Identifier) { Text = "\r\n        " } } }
+                        }
+                    });
+                }
+
+                // Make sure last node inside the class properly indents the closing brace
+                cl.Nodes[^2].Nodes[1].Trail = new List<SyntaxNode> { new(SyntaxNodeKind.Identifier) { Text = "\r\n    " } };
 
                 mainNode.ToFile(path);
             }

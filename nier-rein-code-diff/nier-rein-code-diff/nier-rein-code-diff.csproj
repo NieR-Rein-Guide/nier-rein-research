@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7</TargetFramework>
     <RootNamespace>nier_rein_code_diff</RootNamespace>
   </PropertyGroup>
 
@@ -26,6 +26,10 @@
     <None Include="Templates\TableElementClass.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
   </ItemGroup>
 
 </Project>

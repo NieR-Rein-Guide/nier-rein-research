@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "nier-rein-code-diff": {
+      "commandName": "Project",
+      "commandLineArgs": "-i \"D:\\Users\\Kirito\\Desktop\\Mobile Projects\\NierRein\\RE\\tools\\Il2CppDumper\\workspace_ww_2.18.0\\dump.cs\" -o \"D:\\Users\\Kirito\\Desktop\\Mobile Projects\\NierRein\\Projects\\nier-rein-apps\\nier-rein-api\\NierReincarnation.Core\" -v"
+    }
+  }
+}
