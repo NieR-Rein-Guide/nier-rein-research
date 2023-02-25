@@ -396,7 +396,7 @@ namespace nier_rein_code_diff
                     var properties = cl.Where(SyntaxNodeKind.Property).Length;
 
                     cl.Nodes.Insert(cl.Nodes.Count - 1, new SyntaxNode(SyntaxNodeKind.Identifier) { Text = $"[Key({properties})]\r\n        " });
-                    cl.Nodes.Insert(cl.Nodes.Count - 1, new SyntaxNode(SyntaxNodeKind.Identifier) { Text = $"public {propertyType} {fieldDiff.DumpFieldInfo.Name} {{ get; set; }} " });
+                    cl.Nodes.Insert(cl.Nodes.Count - 1, new SyntaxNode(SyntaxNodeKind.Property) { Text = $"public {propertyType} {fieldDiff.DumpFieldInfo.Name} {{ get; set; }} " });
                     cl.Nodes.Insert(cl.Nodes.Count - 1, new SyntaxNode(SyntaxNodeKind.Comment)
                     {
                         Nodes =
